@@ -6,10 +6,20 @@ import argparse
 import logging
 import os
 from typing import List
+from enum import IntEnum
 from pyBackUp.folder import Folder
 from pyBackUp.file import File, Picture
 
 SEPARADOR = '-'*20
+
+
+class Depth(IntEnum):
+    """
+    Nivel de profundidad de la copia.
+    """
+    YEAR = 0
+    MONTH = 1
+    DAY = 2
 
 
 def get_unique_hash_pictures(pictures: List[str]) -> List[str]:
@@ -53,13 +63,14 @@ def get_unique_hash_pictures(pictures: List[str]) -> List[str]:
 
 
 def save_pictures(input_folder: str, output_folder: str,
-                  no_date_folder: str) -> None:
+                  no_date_folder: str, depth: Depth) -> None:
     """
     Función para almacenar las fotos.
 
     :param input_folder: Carpeta de donde buscar.
     :param output_folder: Carpeta donde volcar las fotos.
     :param no_date_folder: Carpeta para las fotos sin nombre.
+    :param depth: Profundidad de las carpetas de fecha.
     """
 
     # Se obtiene todas las fotos de la carpeta
@@ -94,21 +105,24 @@ def save_pictures(input_folder: str, output_folder: str,
     logging.info('Obteniendo fechas...')
     picture_and_folder = []
     for picture in unique_name:
-
         date = Picture.date_file(picture)
-        if date is None:
-            # Si no tiene fecha, se indica
-            logging.debug('Fotografía sin fecha: "%s"', picture)
-            path = no_date_folder
 
-        else:
+        if date is not None:
             year, month, day = date
             logging.debug('Fotografía con fecha: "%s/%s/%s" %s',
                           year, month, day, picture)
-            try:
+
+            if depth == Depth.YEAR:
+                path = year
+            elif depth == Depth.MONTH:
                 path = os.path.join(year, Picture.get_month(month))
-            except KeyError:  # Sucede si el mes no esta entre 1 y 12
-                path = no_date_folder
+            else:
+                path = os.path.join(year, Picture.get_month(month), day)
+
+        else:
+            # Si no tiene fecha, se indica
+            logging.debug('Fotografía sin fecha: "%s"', picture)
+            path = no_date_folder
 
         # Se crea el full_path
         full_path = os.path.join(output_folder, path)
@@ -141,6 +155,17 @@ if __name__ == "__main__":
                         action='store_true', default=False,
                         help='Flag para mensajes de debug.')
 
+    # Flags para un comportamiento especial
+    group = parser.add_mutually_exclusive_group()
+
+    group.add_argument('--use_day', dest='day',
+                       action='store_true', default=False,
+                       help='Flag para usar hasta el día.')
+
+    group.add_argument('--only_year', dest='year',
+                       action='store_true', default=False,
+                       help='Flag para solo usar el año.')
+
     # Se obtienen los parámetros.
     args = parser.parse_args()
 
@@ -154,6 +179,13 @@ if __name__ == "__main__":
                             datefmt='%m/%d/%Y %I:%M:%S %p',
                             level=logging.INFO)
 
-    save_pictures(input_folder=args.input,
-                  output_folder=args.output,
-                  no_date_folder=args.no_date)
+    # Nivel de profundidad.
+    if args.day:
+        save_pictures(input_folder=args.input, output_folder=args.output,
+                      no_date_folder=args.no_date, depth=Depth.DAY)
+    elif args.year:
+        save_pictures(input_folder=args.input, output_folder=args.output,
+                      no_date_folder=args.no_date, depth=Depth.YEAR)
+    else:
+        save_pictures(input_folder=args.input, output_folder=args.output,
+                      no_date_folder=args.no_date, depth=Depth.MONTH)

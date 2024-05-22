@@ -1,6 +1,7 @@
 """
 Archivos con las clases para trabajar con archivos.
 """
+import datetime
 import logging
 import os
 import re
@@ -166,10 +167,13 @@ class Picture:
         # Se obtienen el año, mes y día.
         year, month, day = result.group(1), result.group(2), result.group(3)
 
-        # Se guardan todos.
+        # Se verifica que sea válida.
         try:
+            # Intentar crear un objeto de fecha
+            datetime.date(int(year), int(month), int(day))
             return year, month, day
-        except (ValueError, KeyError):  # Valores inválidos para el path
+        except (ValueError, TypeError):
+            # Si se lanza una excepción ValueError, la fecha no es válida
             return None
 
     @staticmethod
