@@ -1,8 +1,9 @@
 """
 Archivos con las clases para trabajar con archivos.
 """
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 import hashlib
+import pathlib
 
 
 class File:
@@ -51,3 +52,40 @@ class File:
         unique_files = list(map(lambda a: a[0], unique_files))
 
         return unique_files, dup_files
+
+
+class Picture:
+    """
+    Clase con los métodos para trabajar con archivos que son fotos.
+    """
+
+    extensions: List[str] = [
+        '.JPEG', '.JPG',  # JPEG/JPG
+        '.GIF',  # GIF
+        '.PNG',  # PNG
+        '.WEBP',  # WebP
+        '.RAW'  # RAW
+    ]
+
+    @staticmethod
+    def filter(files: List[str],
+               ext: Union[List[str], None] = None) -> List[str]:
+        """
+        Método para filtrar todos los archivos que sean imágenes.
+
+        :param files: Lista con todos los archivos.
+        :param ext: Lista con todas las extensiones que corresponden a
+        imágenes. Por defecto consideran: JPEG/JPG, GIF, PNG, WebP y RAW.
+        :return: Lista con los archivos que son imágenes.
+        """
+
+        # Si no hay extensiones, se usan las por defecto.
+        if ext is None:
+            ext = Picture.extensions
+
+        # Función para comprobar si un archivo es una foto.
+        def check_extension(file: str) -> bool:
+            file_extension = pathlib.Path(file).suffix
+            return file_extension.upper() in ext
+
+        return list(filter(check_extension, files))
