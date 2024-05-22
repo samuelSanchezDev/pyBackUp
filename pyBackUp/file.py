@@ -1,6 +1,7 @@
 """
 Archivos con las clases para trabajar con archivos.
 """
+import logging
 import os
 import re
 from typing import List, Tuple, Dict, Union
@@ -32,6 +33,8 @@ class File:
 
         # Se comprueba cada archivo.
         for file in files:
+            logging.debug('Estudiando archivo "%s"', file)
+
             # Se instancia la función hash.
             my_hash = hashlib.new(func)
 
@@ -103,40 +106,21 @@ class Picture:
         # Función para comprobar si un archivo es una foto.
         def check_extension(file: str) -> bool:
             file_extension = pathlib.Path(file).suffix
-            return file_extension.upper() in ext
+            is_picture = file_extension.upper() in ext
+            logging.debug('Verificando si es una foto "%s"... %s',
+                          file, is_picture)
+            return is_picture
 
         return list(filter(check_extension, files))
 
     @staticmethod
-    def date_file(file: str, depth: str = 'month') -> str:
+    def date_file(file: str) -> Tuple[str, str, str]:
         """
         Método para saber la fecha de la foto (tiene que estar en el nombre en
         la forma YYYYMMDD).
         :param file: path del archivo.
-        :param depth: Profundidad que que quiere conocer:
-            - year: year
-            - month: year/month
-            - day: year/month/day
-        :return: un string con la fecha o None si no la tiene.
+        :return: una tupla con el año, mes y día de la foto.
         """
-
-        # Se selecciona el método para generar paths
-        if depth.upper() == 'YEAR':
-            def make_path(year: str, month: str, day: str) -> str:
-                return year
-
-        elif depth.upper() == 'MONTH':
-            def make_path(year: str, month: str, day: str) -> str:
-                month = Picture.INT2STR[int(month)]
-                return os.path.join(year, month)
-
-        elif depth.upper() == 'DAY':
-            def make_path(year: str, month: str, day: str) -> str:
-                month = Picture.INT2STR[int(month)]
-                return os.path.join(year, month, day)
-
-        else:
-            raise ValueError('depth solo puede ser "year", "month" o "day".')
 
         # Se obtiene el nombre.
         file_name = os.path.basename(file)
@@ -147,10 +131,21 @@ class Picture:
             return None
 
         # Se obtienen el año, mes y día.
-        y, m, d = result.group(1), result.group(2), result.group(3)
+        year, month, day = result.group(1), result.group(2), result.group(3)
 
         # Se guardan todos.
         try:
-            return make_path(y, m, d)
+            return year, month, day
         except (ValueError, KeyError):  # Valores inválidos para el path
             return None
+
+    @staticmethod
+    def get_month(month: str) -> str:
+        """
+        El método convierte un str 'XX' con el número del mes en otro con
+        'XX - name'.
+
+        :param month: Mes.
+        :return: Mes en el formato indicado.
+        """
+        return Picture.INT2STR[int(month)]
