@@ -1,6 +1,8 @@
 """
 Archivos con las clases para trabajar con archivos.
 """
+import os
+import re
 from typing import List, Tuple, Dict, Union
 import hashlib
 import pathlib
@@ -67,6 +69,21 @@ class Picture:
         '.RAW'  # RAW
     ]
 
+    INT2STR = {
+        1: '01 - Enero',
+        2: '02 - Febrero',
+        3: '03 - Marzo',
+        4: '04 - Abril',
+        5: '05 - Mayo',
+        6: '06 - Junio',
+        7: '07 - Julio',
+        8: '08 - Agosto',
+        9: '09 - Septiembre',
+        10: '10 - Octubre',
+        11: '11 - Noviembre',
+        12: '12 - Diciembre'
+    }
+
     @staticmethod
     def filter(files: List[str],
                ext: Union[List[str], None] = None) -> List[str]:
@@ -89,3 +106,51 @@ class Picture:
             return file_extension.upper() in ext
 
         return list(filter(check_extension, files))
+
+    @staticmethod
+    def date_file(file: str, depth: str = 'month') -> str:
+        """
+        Método para saber la fecha de la foto (tiene que estar en el nombre en
+        la forma YYYYMMDD).
+        :param file: path del archivo.
+        :param depth: Profundidad que que quiere conocer:
+            - year: year
+            - month: year/month
+            - day: year/month/day
+        :return: un string con la fecha o None si no la tiene.
+        """
+
+        # Se selecciona el método para generar paths
+        if depth.upper() == 'YEAR':
+            def make_path(year: str, month: str, day: str) -> str:
+                return year
+
+        elif depth.upper() == 'MONTH':
+            def make_path(year: str, month: str, day: str) -> str:
+                month = Picture.INT2STR[int(month)]
+                return os.path.join(year, month)
+
+        elif depth.upper() == 'DAY':
+            def make_path(year: str, month: str, day: str) -> str:
+                month = Picture.INT2STR[int(month)]
+                return os.path.join(year, month, day)
+
+        else:
+            raise ValueError('depth solo puede ser "year", "month" o "day".')
+
+        # Se obtiene el nombre.
+        file_name = os.path.basename(file)
+
+        # Se filtran los que no tienen en el nombre el patrón YYYYMMDD.
+        result = re.search(r'(\d{4})(\d{2})(\d{2})', file_name)
+        if not result:
+            return None
+
+        # Se obtienen el año, mes y día.
+        y, m, d = result.group(1), result.group(2), result.group(3)
+
+        # Se guardan todos.
+        try:
+            return make_path(y, m, d)
+        except (ValueError, KeyError):  # Valores inválidos para el path
+            return None
