@@ -1,13 +1,15 @@
 """
 Archivos con las clases para trabajar con carpetas.
 """
-from typing import List, Tuple, Set, Dict
+import shutil
+from typing import List, Tuple
 import os
 import logging
 
+
 class Folder:
     """
-    Clase con los métodos para trabajar con archivos.
+    Clase con los métodos para trabajar con carpetas.
     """
 
     @staticmethod
@@ -42,6 +44,26 @@ class Folder:
 
             # Cualquier otro caso, se ignora.
             else:
-                logging.info(f'Ignorando path: {full_path}')
+                logging.info('Ignorando path: "%s"', full_path)
 
         return all_files
+
+    @staticmethod
+    def move_files(files: List[Tuple[str, str]]) -> None:
+        """
+        Método para mover archivos a la carpeta correspondiente.
+
+        :param files: Lista con los archivos que mover en forma de tupla
+        (path_de_origen, path_de_la_carpeta_destino)
+        """
+
+        # Se extraen todas las carpetas únicas y se crean.
+        all_folders = list(map(lambda a: a[1], files))
+        for folder in set(all_folders):
+            os.makedirs(folder, exist_ok=True)
+
+        # Se mueven todos los archivos a su nueva path
+        for old_path, new_folder in files:
+            file_name = os.path.basename(old_path)
+            new_path = os.path.join(new_folder, file_name)
+            shutil.copyfile(old_path, new_path)
