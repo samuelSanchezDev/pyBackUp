@@ -68,4 +68,4 @@ class Folder:
             file_name = os.path.basename(old_path)
             new_path = os.path.join(new_folder, file_name)
             shutil.copyfile(old_path, new_path)
-            logging.debug('Desplazado archivo "%s -> %s"', old_path, new_path)
+            logging.debug('Copiando archivo "%s -> %s"', old_path, new_path)
