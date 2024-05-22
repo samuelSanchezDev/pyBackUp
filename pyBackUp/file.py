@@ -58,6 +58,39 @@ class File:
 
         return unique_files, dup_files
 
+    @staticmethod
+    def unique_names(files: List[str]) -> Tuple[List[str],
+                                                List[Tuple[str, ...]]]:
+        """
+        Función para filtrar los archivos con mismo nombre.
+
+        :param files: Lista con los path de todos los archivos.
+        :return: Los listas, la primera con los path de archivos únicos, y la
+        segunda con tuplas con los archivos con el mismo nombre.
+        """
+
+        # Se añaden todos los archivos a un diccionario por su digest.
+        all_names: Dict[str, Tuple[str, ...]] = {}
+
+        # Se comprueba cada archivo.
+        for file in files:
+            logging.debug('Estudiando archivo "%s"', file)
+            name = os.path.basename(file)
+            # Se añade al diccionario.
+            if name in all_names:
+                all_names[name] += (file,)
+            else:
+                all_names[name] = (file,)
+
+        # Se filtran los archivos únicos y repetidos.
+        unique_files = list(filter(lambda a: len(a) == 1, all_names.values()))
+        dup_files = list(filter(lambda a: len(a) != 1, all_names.values()))
+
+        # Los archivos únicos se mapean para eliminar las tuplas
+        unique_files = list(map(lambda a: a[0], unique_files))
+
+        return unique_files, dup_files
+
 
 class Picture:
     """
