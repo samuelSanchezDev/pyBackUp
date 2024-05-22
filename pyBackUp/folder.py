@@ -60,6 +60,7 @@ class Folder:
         # Se extraen todas las carpetas únicas y se crean.
         all_folders = list(map(lambda a: a[1], files))
         for folder in set(all_folders):
+            logging.debug('Creada carpeta "%s"', folder)
             os.makedirs(folder, exist_ok=True)
 
         # Se mueven todos los archivos a su nueva path
@@ -67,3 +68,4 @@ class Folder:
             file_name = os.path.basename(old_path)
             new_path = os.path.join(new_folder, file_name)
             shutil.copyfile(old_path, new_path)
+            logging.debug('Desplazado archivo "%s -> %s"', old_path, new_path)
